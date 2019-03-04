@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    active_proxy (1.0.0)
+    active_proxy (1.0.1)
       nokogiri (>= 1.6.8)
       proxy_fetcher (>= 0.9.0)
       retries (>= 0.0.5)
