@@ -1,28 +1,130 @@
 # ActiveProxy
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/active_proxy`. To experiment with that code, run `bin/console` for an interactive prompt.
+![Alt text](https://travis-ci.com/sebyx07/active_proxy.svg?branch=master)
+[![Gem Version](https://badge.fury.io/rb/active_proxy.svg)](https://badge.fury.io/rb/active_proxy)
 
-TODO: Delete this and the text above, and describe your gem
+### Easy to use ruby proxy fetcher with support for multiple http clients. Has auto retry🚀, fetch 🤖user agent
 
-## Installation
-
-Add this line to your application's Gemfile:
 
 ```ruby
 gem 'active_proxy'
 ```
 
-And then execute:
+### Examples
 
-    $ bundle
+#### HTTParty
 
-Or install it yourself as:
+```ruby
+    cache = ActiveSupport::Cache::MemoryStore.new(size: 10.megabytes)
 
-    $ gem install active_proxy
+    ActiveProxy.call("ipify", cache) do |proxy| # for rails: ActiveProxy.call("ipify", Rails.cache) do |proxy|
+      
+      options = proxy.format_proxy_httparty
+      options[:timeout] = 2
+      options[:headers] = {
+          "Accept" => "application/json",
+          "User-Agent" => proxy.user_agent
+      }
 
-## Usage
+      result = HTTParty.get("https://api.ipify.org?format=json", options).body
+      p JSON.parse(result)
+      
+    end
+```
 
-TODO: Write usage instructions here
+#### Http.rb
+
+```ruby
+    cache = ActiveSupport::Cache::MemoryStore.new(size: 10.megabytes)
+
+    ActiveProxy.call("ipify", cache) do |proxy| # for rails: ActiveProxy.call("ipify", Rails.cache) do |proxy|
+      
+      proxy_arguments = proxy.format_proxy_http
+      headers = {
+        "Accept" => "application/json",
+        "User-Agent" => proxy.user_agent
+      }
+
+      result = HTTP.via(*proxy_arguments)
+                   .headers(headers)
+                   .timeout(write: 2, connect: 1, read: 1)
+                   .get("https://api.ipify.org?format=json")
+                   .body
+
+      p JSON.parse(result)      
+      
+    end
+```
+
+#### Typhoeus
+
+
+```ruby
+    cache = ActiveSupport::Cache::MemoryStore.new(size: 10.megabytes)
+
+    ActiveProxy.call("ipify", cache) do |proxy| # for rails: ActiveProxy.call("ipify", Rails.cache) do |proxy|
+      
+      options = proxy.format_proxy_typhoeus
+      options[:timeout] = 2
+      options[:followlocation] = true
+      options[:headers] = {
+        "Accept" => "application/json",
+        "User-Agent" => proxy.user_agent
+      }
+      options[:method] = :get
+
+      result = Typhoeus::Request.new("https://api.ipify.org?format=json", options).run.body
+
+      p JSON.parse(result)     
+       
+    end
+```
+
+
+#### custom client
+
+```ruby
+    cache = ActiveSupport::Cache::MemoryStore.new(size: 10.megabytes)
+
+    ActiveProxy.call("ipify", cache) do |proxy| # for rails: ActiveProxy.call("ipify", Rails.cache) do |proxy|
+      
+      options = proxy.current_proxy
+      # then you access the options[:address] and options[:port]
+    end
+```
+
+
+### Custom options
+
+#### User agent
+
+When calling `.user_agent` you can pass params, check https://github.com/asconix/user-agent-randomizer
+
+#### Limit retries
+
+Current limit is 10.
+
+Because proxies are unreliable, set a higher number
+
+```ruby
+    ActiveProxy.call("ipify", cache, {max_retries: 100}) do
+    
+    end
+```
+
+
+#### Proxy list
+
+Current configuration is `{ filters: { maxtime: "200" } }`
+
+You can check what configuration you can pass https://github.com/nbulaj/proxy_fetcher
+
+```ruby
+    ActiveProxy.call("ipify", cache, {proxy_manager_options: { filters: { maxtime: "100" } }}) do
+    
+    end
+```
+
 
 ## Development
 
