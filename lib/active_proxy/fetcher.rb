@@ -41,8 +41,8 @@ module ActiveProxy
       current_proxy
     end
 
-    def user_agent
-      UserAgentRandomizer::UserAgent.fetch.string
+    def user_agent(options = {})
+      UserAgentRandomizer::UserAgent.fetch(options).string
     end
 
     private
