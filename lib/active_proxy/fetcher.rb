@@ -38,6 +38,10 @@ module ActiveProxy
       end
       return proxy unless proxy.nil?
       cache_store.delete(cache_key("list"))
+      cache_store.delete(cache_key("current"))
+      sleep 0.5
+      proxy_list.sample
+
       current_proxy
     end
 
@@ -48,7 +52,10 @@ module ActiveProxy
     private
 
       def cache_key(item_name)
-        "HTTP-PROXY-#{proxy_key}-#{Process.pid}-#{item_name}"
+        if options[:unique_per_process]
+          return "HTTP-PROXY-#{proxy_key}-#{Process.pid}-#{item_name}"
+        end
+        "HTTP-PROXY-#{proxy_key}-#{item_name}"
       end
 
       def proxy_list
